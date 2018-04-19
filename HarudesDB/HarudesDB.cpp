@@ -12,9 +12,9 @@ void mayusculas(string &palabra){
 
 void create_table(string nombre, string atributes){
 	mayusculas(nombre);
-	ofstream table("C:\\Users\\Estilos\\Desktop\\HarudesDB\\" + nombre + ".txt", ios::app);
-	ofstream metadata("C:\\Users\\Estilos\\Desktop\\HarudesDB\\METADATA.txt", ios::app);
-	metadata<<nombre+"("+atributes+")";
+	ofstream table(nombre + ".txt", ios::app);
+	ofstream metadata("METADATA.txt", ios::app);
+	metadata<<"TABLE "<<nombre+"("+atributes+")";
 	metadata<<endl;
 }
 
@@ -57,6 +57,20 @@ bool crear_tabla(){
 	}
 	create_table(tabla,atributo);
 	return 1;
+}
+
+void insert_into(string tabla, string atributos){
+	mayusculas(tabla);
+	mayusculas(atributos);
+	ofstream table(tabla+".txt",ios::app);
+	table<<atributos<<endl;
+}
+
+bool insertar_tabla(){
+	string tabla, atributos, temp;
+	ifstream metadata("METADATA.txt");
+	cout<<"Ingrese los campos separados por ,:";
+	
 }
 
 int main(int argc, char *argv[]){
