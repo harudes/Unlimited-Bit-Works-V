@@ -1,0 +1,139 @@
+unit secant;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, ParseMath, MatrixOperations;
+
+type
+
+  TSecant = class
+    ErrorAllowed,
+    h: Real;
+    SequenceX,
+    SequenceE:TstringList;
+    x,y:Real;
+    function Execute(): Boolean;
+    private
+      Error:Real;
+      function FillJacobiana(m:Matriz):Matriz;
+      funcion1, funcion2:TParseMath;
+      Matrices:TMatrixOperations;
+    public
+      constructor create;
+      destructor Destroy; override;
+  end;
+
+implementation
+
+const
+  Top=100000;
+
+constructor TSecant.create;
+begin
+  SequenceX:=TstringList.Create();
+  SequenceE:=TstringList.Create();
+  SequenceX.Add('');
+  SequenceE.Add('');
+  SequenceE.Add(' ');
+  Error:=Top;
+  x:=0;
+  y:=0;
+  h:=0;
+  Matrices:=TMatrixOperations.create;
+end;
+
+destructor TSecant.Destroy;
+begin
+  SequenceE.Destroy;
+  SequenceX.Destroy;
+end;
+
+function Power( b: Real; n: Integer ): Real;
+var i: Integer;
+begin
+   Result:= 1;
+   for i:= 1 to n do
+      Result:= Result * b;
+
+end;
+
+function TSecant.FillJacobiana():Matriz;
+var i,j:integer;
+  aux:real;
+begin
+   SetLength(result,2,2);
+   funcion1.NewValue('x',X+h);
+   aux:=funcion1.evaluate();
+   funcion1.NewValue('x',X-h);
+   aux:=(aux-funcion1.evaluate())/(2*h);
+   result[0,0]:=aux;
+   funcion2.NewValue('x',X+h);
+   aux:=funcion2.evaluate();
+   funcion2.NewValue('x',X-h);
+   aux:=(aux-funcion2.evaluate())/(2*h);
+   result[0,1]:=aux;
+   funcion1.NewValue('x',X);
+   funcion2.NewValue('x',X);
+   funcion1.NewValue('y',y+h);
+   aux:=funcion1.evaluate();
+   funcion1.NewValue('y',y-h);
+   aux:=(aux-funcion1.evaluate())/(2*h);
+   result[1,0]:=aux;
+   funcion2.NewValue('y',y+h);
+   aux:=funcion2.evaluate();
+   funcion2.NewValue('y',y-h);
+   aux:=(aux-funcion2.evaluate())/(2*h);
+   result[1,1]:=aux;
+   funcion1.NewValue('y',y);
+   funcion2.NewValue('y',y);
+end;
+
+function TSecant.Execute():Boolean;
+var ErrorN:Real;
+  Xn,Jacobiana:Matriz;
+  n:Integer;
+begin
+  h:=ErrorAllowed/10;
+  ErrorN:=0;
+  n:=0;
+  Result:=true;
+  SetLength(Xn,1,2);
+  SetLength(Jacobiana,2,2);
+  Jacobiana:=FillJacobiana();
+  Jacobiana:=Matrices.Inversa(Jacobiana);
+  Xn(0,0):=funcion1.evaluate();
+  Xn(0,1):=funcion2.evaluate();
+  Xn:=Matrices.MultiMatrix(Jacobiana,Xn);
+  Xn[0,0]:=X-Xn[0,0];
+  Xn[0,1]:=y-Xn[0,1];
+  SequenceX.add('('+FloatToStr(Xn(0,0))+','+FloatToStr(Xn(0,1))+')');
+  Error:=Matrices.Norma(Xn);
+  SequenceE.Add(FloatToStr(Error));
+  X:=Xn[0,0];
+  y:=Xn[0,1];
+  repeat
+    Jacobiana:=FillJacobiana();
+    Jacobiana:=Matrices.Inversa(Jacobiana);
+    Xn(0,0):=funcion1.evaluate();
+    Xn(0,1):=funcion2.evaluate();
+    Xn:=Matrices.MultiMatrix(Jacobiana,Xn);
+    Xn[0,0]:=X-Xn[0,0];
+    Xn[0,1]:=y-Xn[0,1];
+    SequenceX.add('('+FloatToStr(Xn(0,0))+','+FloatToStr(Xn(0,1))+')');
+    ErrorN:=Error;
+    Error:=Matrices.Norma(Xn);
+    X:=Xn[0,0];
+    y:=Xn[0,1];
+    SequenceE.Add(FloatToStr(Error));
+    n:= n + 1;
+    if(ErrorN<=Error) then
+      Result:=false;
+  until(Error<=ErrorAllowed) or (n>=Top) or (ErrorN<=Error) ;
+ Error:=Top;
+end;
+
+end.
+
