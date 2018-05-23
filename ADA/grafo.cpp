@@ -50,13 +50,13 @@ public:
 		weight[e.v][e.u]=e.w;
 		if(digraph)
 			adj[e.v][e.u]=1;
-			Ecnt++;
+		Ecnt++;
 	};
 	void remove(Edge e){
 		adj[e.v][e.w]=0;
 		if(digraph)
 			adj[e.w][e.v]=0;
-			Ecnt--;
+		Ecnt--;
 	};
 	bool edge(int u, int v){
 		return adj[u][v];
@@ -103,49 +103,39 @@ public:
 		vector<int> nodos;
 		while(s!=camino[s]){
 			nodos.push_back(s);
+			s=camino[s];
 		}
 		nodos.push_back(s);
 		for(int i=nodos.size()-1;i>=0;i--){
 			cout<<nodos[i]<<",";
 		}
 	}
-	void ordenar(vector<int> vecinos){
-		float cur_value;
-		int j;
-		for(int i=0;i<vecinos.size();i++){
-			cur_value = pesos[vecinos[i]];
-			j=i-1;
-			while(j >= 0 && pesos[vecinos[j]] > cur_value){
-				vecinos[j+1] = vecinos[j];
-				j=j-1;
+	void dijkstra2(int s, int b, float peso){
+		disp[s]="done";
+		if(s==b){
+			cout<<"Hacia "<<s<<": "<<peso+0.0<<endl;
+			cout<<"Recorrido: "<<endl;
+			recorrido(s);
+		}
+		else{
+			vector<int> vecinos=neightbors(s);
+			pesos[s]=peso;
+			for(unsigned int i=0;i<vecinos.size();i++){
+				if(disp[vecinos[i]]!="done"){
+					if(pesos[s]+weight[s][vecinos[i]]<pesos[vecinos[i]]){
+						pesos[vecinos[i]]=pesos[s]+weight[s][vecinos[i]];
+						camino[vecinos[i]]=s;
+					}
+				}
 			}
-			pesos[vecinos[j+1]]=cur_value;
+			int menor=menor_peso();
+			if(menor>=0)
+				dijkstra2(menor,b,pesos[menor]);
 		}
 	}
 	void dijkstra(int s, int b, float peso){
-		camino.push_back(s);
-		if(s==b){
-			disp[s]="done";
-			cout<<"Hacia "<<s<<": "<<peso+0.0<<endl;
-			cout<<"Recorrido: ";
-			recorrido(s);
-		}
-		for(unsigned int i=0;i<camino.size();i++)
-			cout<<camino[i]<<",";
-		cout<<endl;
-		vector<int> vecinos=neightbors(s);
-		pesos[s]=peso;
-		for(unsigned int i=0;i<vecinos.size();i++){
-			if(disp[vecinos[i]]!="done"){
-				if(pesos[s]+weight[s][vecinos[i]]<pesos[vecinos[i]]){
-					pesos[vecinos[i]]=pesos[s]+weight[s][vecinos[i]];
-					camino[vecinos[i]]=s;
-				}
-			}
-		}
-		int menor=menor_peso();
-		if(menor>=0)
-			dijkstra(menor,b,pesos[menor]);
+		camino[s]=s;
+		dijkstra2(s,b,peso);
 	};
 	void bfs(int s){
 		vector<vector<int> > L(Vcnt);
@@ -176,6 +166,7 @@ public:
 		bool end() { return i >= G.V(); }
 	};
 };
+
 
 
 template <class Graph>
@@ -220,10 +211,8 @@ int main(int argc, char *argv[]){
 		Edge ed(a,b,w+0.0);
 		grafo.insert(ed);
 	}
-	show(grafo);
-	vector<int> camino;
-	grafo.dijkstra(1,89,0.0);
+	//show(grafo);
+	grafo.dijkstra(10,100,0.0);
 	return 0;
 }
-
 
